@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>图片上传</title>
+    <link rel="shortcut icon" href="/public/img/favicon_.ico">
+    <link href="//cdn.staticfile.org/twitter-bootstrap/3.0.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+    <script src="//apps.bdimg.com/libs/html5shiv/3.7/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript" src="//cdn.staticfile.org/jquery/2.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdn.staticfile.org/jqueryui/1.10.2/jquery-ui.min.js"></script>
+    <script type="text/javascript"
+        src="//cdn.staticfile.org/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
+    <script type="text/javascript" src="//cdn.staticfile.org/twitter-bootstrap/3.0.1/js/bootstrap.min.js"></script>
+    <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="/node_modules/jquery-form/dist/jquery.form.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row clearfix">
+            <div class="col-md-12 column">
+                <ul class="breadcrumb">
+                    <li>
+                        <a href="/" style="text-decoration: none">首页</a>
+                    </li>
+                    <li class="active">
+                        图片上传
+                    </li>
+                </ul>
+                <h3>
+                    图片上传
+                </h3>
+                <hr>
+                <p>
+                    本页面支持上传图片后，获取图片线上地址! 根据该地址可以在任何地方引用
+                </p>
+                <hr>
+                <div class="row clearfix">
+                    <div class="col-md-6 column">
+                        <div class="panel panel-default">
+                            <div class="panel-body" style="text-align: center">
+                                <img class="photo photo-img" src="/public/img/avatar-default.png" alt="..."
+                                    width="200px" height="200px">
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div id="imgInfo">请选择你要上传的图片后，点击提交</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 column">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <form id="img_form" enctype="multipart/form-data" action="" type="POST">
+                                    <div class="form-group">
+                                        <label for="exampleInputFile">File input</label>
+                                        <input name="img" type="file" id="img-input" />
+                                    </div>
+                                    <hr>
+                                    <button type="button" class="btn btn-success" onclick="changeImg()">提交</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function changeImg() {
+            // 图片更改后异步提交表单上传服务器，返回url
+            $("#img_form").ajaxSubmit({
+                url: '/api/public/v1/demo/upload', //上传文件的路径
+                type: 'post',
+                success: function (res) {
+                    if (res.err_code === 0) {
+                        var imgUrl = res.data.url
+                        $('.photo').attr('src', '/' + imgUrl)
+                        $('#imgInfo').text('您的图片链接：http://localhost:5000/' + imgUrl.replace(/\\/g, "/"))
+                    } else {
+                        alert('上传图片出错！' + res.err)
+                    }
+                }
+            })
+
+        }
+    </script>
+</body>
+
+</html>
