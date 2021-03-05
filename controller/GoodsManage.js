@@ -81,6 +81,7 @@ async function SearchGoodsList(req, res, next) {
     }
 }
 
+
 module.exports = {
     addGoods,
     getGoodsInfo,

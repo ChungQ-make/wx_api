@@ -47,32 +47,47 @@ async function createOrder(req, res, next) {
     if (!state) {
         return res.status(403).sendResult(null, 403, '无效token！')
     }
-    const formData = req.body
-    if (!formData.goods_id)
-        return res.sendResult(null, 403, '缺少参数！')
-    try {
-        let data = await Goods.findOne({ goods_id: formData.goods_id }, { stocks: true, status: true })
-        // 进行lodash深拷贝
-        const goodInfo = lodash.cloneDeep(data)
-        // console.log(data)
-        // 更新商品的库存和状态
-        data.stocks = data.stocks - req.body.totalNum
-        if (data.stocks < 0) {
-            return res.sendResult(goodInfo, 1000, '该商品库存不足！')
-        } else if (data.status === 1) {
-            return res.sendResult(goodInfo, 1000, '该商品库存不足！')
-        } else if (data.status === 2) {
-            return res.sendResult(goodInfo, 1001, '该商品暂停出售！')
+    const {formData,totalPrice} = req.body
+    if (!formData.length) { return res.sendResult(null, 403, '空数据！') }
+
+    // 记录创建的订单数据
+    let orderInfos = []
+    formData.forEach(async (item, index) => {
+        try {
+            let data = await Goods.findOne({ goods_id: item.goods_id }, { stocks: true, status: true })
+            // 进行lodash深拷贝
+            const goodInfo = lodash.cloneDeep(data)
+            // 更新商品的库存和状态
+            data.stocks = data.stocks - item.totalNum
+            console.log(data.stocks)
+            if (data.stocks < 0) {
+                return res.sendResult(goodInfo, 1000, '该商品库存不足！')
+            } else if (data.status === 1) {
+                return res.sendResult(goodInfo, 1000, '该商品库存不足！')
+            } else if (data.status === 2) {
+                return res.sendResult(goodInfo, 1001, '该商品暂停出售！')
+            }
+            if (data.stocks === 0) {
+                data.status = 1
+            }
+            console.log(data);
+            await Goods.updateOne({ goods_id: item.goods_id }, data)
+            const orderInfo = await new Orders(item).save()
+            orderInfos.push(orderInfo)
+            if (index === formData.length - 1) {
+                let { money } = await User.findOne({ openid: item.buyer_id }).lean()
+                money = money - totalPrice
+                // console.log('money:'+money)
+                if (money < 0) {
+                    return res.sendResult(goodInfo, 1002, '余额不足！')
+                }
+                await User.updateOne({ openid: item.buyer_id }, { money })
+                res.sendResult({orderInfos,money})
+            }
+        } catch (err) {
+            next(err)
         }
-        if (data.stocks === 0) {
-            data.status = 1
-        }
-        await Goods.updateOne({ goods_id: formData.goods_id }, data)
-        const orderInfo = await new Orders(formData).save()
-        res.sendResult(orderInfo)
-    } catch (err) {
-        next(err)
-    }
+    })
 }
 
 async function findOrdersInfo(req, res, next) {

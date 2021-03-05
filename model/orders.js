@@ -51,16 +51,15 @@ const ordersSchema = new Schema({
     },
     status: {
         type: Number,
-        enum: [0, 1, 2, 3, 4, 5],
-        // 0 未支付
-        // 1 已支付
+        enum: [0, 1, 2, 3, 4],
+        // 0 已支付
+        // 1 交易中
         // 2 交易完成
         // 3 退货处理中
         // 4 退货完成
-        // 5 取消订单
         default: 0
     },
-    totalAmount: {
+    totalPrice: {
         type: Number,
         required: true
     },

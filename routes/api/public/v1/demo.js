@@ -3,6 +3,7 @@ const router = express.Router()
 const token = require('../../../../utils/token')
 const UserManage = require('../../../../controller/UserManage')
 const GoodsManage = require('../../../../controller/GoodsManage')
+const User = require('../../../../model/user')
 // const multer = require('multer') 
 const upload = require('../../../../utils/upload')
 
@@ -156,6 +157,18 @@ function uploadMiddleware(req, res, next) {
 // 商品添加测试路由
 router.get('/addGoods', (req, res, next) => {
     GoodsManage.addGoodsTest(req, res, next)
+})
+
+
+// 测试 1
+router.get('/getInfos',async (req,res,next)=>{
+    const {openid} = req.query
+    // const userInfos = await User.findOne({
+    //     openid
+    // })
+    let {money} = await User.findOne({openid},{money: 1}).lean()
+    let data = await User.findOne({openid},{money: 1}).lean()
+    res.sendResult({money, data})
 })
 
 module.exports = router

@@ -4,6 +4,8 @@ const OrderManage = require('../../../../controller/OrderManage')
 const tokenObj = require('../../../../utils/token')
 
 // 关于订单的操作的路由
+
+// 创建订单
 router.post('/create', tokenObj.verifyToken, (req, res, next) => {
     OrderManage.createOrder(req, res, next)
 })
