@@ -41,7 +41,7 @@ const userSchema = new Schema({
     status: {
         type: Number,
         // 0 没有权限限制
-        // 1 不可以评论
+        // 1 不可以售卖商品
         // 2 不可以登录
         enum: [0, 1, 2],
         default: 0

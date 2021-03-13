@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 
-
 // index主路由
 router.get('/', (req, res, next) => {
     const data = {
@@ -9,5 +8,6 @@ router.get('/', (req, res, next) => {
     }
     res.sendResult(data)
 })
+
 
 module.exports = router

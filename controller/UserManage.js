@@ -8,13 +8,13 @@ const request = require('request')
 
 
 // 登陆用户返回token值
-async function UserLogin(req, res, next) {
+async function userLogin(req, res, next) {
     const {
         userInfo,
         code
     } = req.body
-    if (!userInfo || !code) {
-        return res.sendResult(null, 403, '缺少参数')
+    if (userInfo === undefined || code === undefined) {
+        return res.sendResult(null, 202, '缺少参数')
     }
     // 通过code换取openid
     const appID = 'wx6337405430aef36e'
@@ -75,8 +75,55 @@ async function UserLogin(req, res, next) {
     })
 }
 
+// 用户充值
+async function userTopUps(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    let { topUpsMoney, openid } = req.body
+    if(topUpsMoney === undefined || openid === undefined){
+        return res.sendResult(null,202,'缺少参数')
+    }
+    topUpsMoney = JSON.parse(topUpsMoney)
+    try {
+        // res.sendResult({topUpsMoney,openid})
+        const data = await User.findOne({ openid })
+        data.money = data.money + topUpsMoney
+        await User.updateOne({ openid }, data)
+        const userInfos = await User.findOne({ openid })
+        res.sendResult({ userInfos, money: userInfos.money })
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 获取单个用户信息
+async function getUerinfoByID(req,res,next){
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const {openid} = req.body
+    if (openid === undefined) {
+        return res.sendResult(null,202,'缺少参数')
+    }
+    try {
+        const data = await User.findOne({openid})
+        if (!data) {
+            res.sendResult(null,404,'无此用户信息！')
+        }
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
+
+
 
 
 module.exports = {
-    UserLogin
+    userLogin,
+    userTopUps,
+    getUerinfoByID
 }

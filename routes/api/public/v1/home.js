@@ -11,19 +11,19 @@ router.get('/swiperdata', (req, res, next) => {
             "image_src": "https://api-hmugo-web.itheima.net/pyg/banner1.png",
             "open_type": "navigate",
             "goods_id": 129,
-            "navigator_url": "/pages/goods_detail/main?goods_id=132"
+            "navigator_url": "/pages/goods_detail/main?goods_id=1614312234835"
         },
         {
             "image_src": "https://api-hmugo-web.itheima.net/pyg/banner2.png",
             "open_type": "navigate",
             "goods_id": 395,
-            "navigator_url": "/pages/goods_detail/main?goods_id=395"
+            "navigator_url": "/pages/goods_detail/main?goods_id=1614312234835"
         },
         {
             "image_src": "https://api-hmugo-web.itheima.net/pyg/banner3.png",
             "open_type": "navigate",
             "goods_id": 38,
-            "navigator_url": "/pages/goods_detail/main?goods_id=38"
+            "navigator_url": "/pages/goods_detail/main?goods_id=1614312234835"
         }
     ]
     res.sendResult(data)
@@ -42,13 +42,13 @@ router.get('/catitems', (req, res, next) => {
             "name": "热门推荐",
             "image_src": "http://localhost:5000/upload/img/catitems/goods_recommend.png",
             "open_type": "switchTab",
-            "navigator_url": "/pages/categories/main"
+            "navigator_url": "/pages/goods_list/main"
         },
         {
             "name": "新品上线",
             "image_src": "http://localhost:5000/upload/img/catitems/goods_new.png",
             "open_type": "switchTab",
-            "navigator_url": "/pages/categories/main"
+            "navigator_url": "/pages/goods_list/main"
         },
         {
             "name": "官方商城",

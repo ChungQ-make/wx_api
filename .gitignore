@@ -1,5 +1,6 @@
 .DS_Store
 node_modules
+upload/img/goods
 
 # local env files
 .env.local

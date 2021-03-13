@@ -47,8 +47,8 @@ async function createOrder(req, res, next) {
     if (!state) {
         return res.status(403).sendResult(null, 403, '无效token！')
     }
-    const {formData,totalPrice} = req.body
-    if (!formData.length) { return res.sendResult(null, 403, '空数据！') }
+    const { formData, totalPrice } = req.body
+    if (!formData.length) { return res.sendResult(null, 404, '空数据！') }
 
     // 记录创建的订单数据
     let orderInfos = []
@@ -59,7 +59,6 @@ async function createOrder(req, res, next) {
             const goodInfo = lodash.cloneDeep(data)
             // 更新商品的库存和状态
             data.stocks = data.stocks - item.totalNum
-            console.log(data.stocks)
             if (data.stocks < 0) {
                 return res.sendResult(goodInfo, 1000, '该商品库存不足！')
             } else if (data.status === 1) {
@@ -70,10 +69,8 @@ async function createOrder(req, res, next) {
             if (data.stocks === 0) {
                 data.status = 1
             }
-            console.log(data);
             await Goods.updateOne({ goods_id: item.goods_id }, data)
             const orderInfo = await new Orders(item).save()
-            orderInfos.push(orderInfo)
             if (index === formData.length - 1) {
                 let { money } = await User.findOne({ openid: item.buyer_id }).lean()
                 money = money - totalPrice
@@ -82,7 +79,7 @@ async function createOrder(req, res, next) {
                     return res.sendResult(goodInfo, 1002, '余额不足！')
                 }
                 await User.updateOne({ openid: item.buyer_id }, { money })
-                res.sendResult({orderInfos,money})
+                res.sendResult({ orderInfos, money })
             }
         } catch (err) {
             next(err)
@@ -97,8 +94,11 @@ async function findOrdersInfo(req, res, next) {
     }
     try {
         const { order_id } = req.body
+        if (order_id === undefined) {
+            return res.sendResult(null, 202, '缺少参数！')
+        }
         if (!await Orders.findOne({ order_id }))
-            return res.sendResult(null, 403, '该订单不存在！')
+            return res.sendResult(null, 404, '该订单不存在！')
         const orderInfos = await Orders.findOne({ order_id })
         res.sendResult(orderInfos)
     } catch (err) {
@@ -111,12 +111,22 @@ async function getOrdersList(req, res, next) {
     if (!state) {
         return res.status(403).sendResult(null, 403, '无效token！')
     }
-    const { openid } = req.body
-    if (!openid)
-        return res.sendResult(null, 403, '缺少(openid)参数！')
+    const { openid, status } = req.body
+    if (openid === undefined) {
+        return res.sendResult(null, 202, '缺少(openid)参数！')
+    }
     try {
-        const orderList = await Orders.find({ buyer_id: openid })
-        res.sendResult(orderList)
+        if (status === undefined) {
+            const orderList = await Orders.find({ buyer_id: openid })
+            res.sendResult(orderList)
+        } else {
+            const orderList = await Orders.find({
+                $and: [
+                    { buyer_id: openid }, { status }
+                ]
+            })
+            res.sendResult(orderList)
+        }
     } catch (err) {
         next(err)
     }
@@ -128,7 +138,7 @@ async function editAddress(req, res, next) {
         return res.status(403).sendResult(null, 403, '无效token！')
     }
     const { order_id, address } = req.body
-    if (!order_id || !address) return res.sendResult(null, 403, '缺少参数！')
+    if (order_id === undefined || address === undefined) return res.sendResult(null, 202, '缺少参数！')
     try {
         if (!await Orders.findOne({ order_id }))
             return res.sendResult(null, 403, '该订单不存在！')
@@ -148,7 +158,7 @@ async function OrderPay(req, res, next) {
     try {
         const { order_id, openid } = req.body
         if (!await Orders.findOne({ order_id }))
-            return res.sendResult(null, 403, '该订单不存在！')
+            return res.sendResult(null, 404, '该订单不存在！')
         const { totalAmount } = await Orders.findOne({ order_id })
         const { money } = await User.findOne({ openid })
         // 更新数据
@@ -164,6 +174,171 @@ async function OrderPay(req, res, next) {
         next(err)
     }
 }
+
+
+async function editDes(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const { order_id, description } = req.body
+    if (order_id === undefined || description === undefined) {
+        return res.sendResult(null, 202, '缺少参数！')
+    }
+    try {
+        await Orders.updateOne({ order_id }, { description })
+        res.sendResult(null, 200, 'update description success！')
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 获取由我的商品创建的订单列表
+async function getMyGoodsOrdersByID(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const { seller_id } = req.body
+    if (seller_id === undefined) {
+        return res.sendResult(null, 202, '缺少参数')
+    }
+    try {
+        const data = await Orders.find({ seller_id })
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 商家发货 状态变更为待收货状态（1）
+async function deliverGoodsByID(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const { order_id } = req.body
+    if (order_id === undefined) {
+        return res.status(404).sendResult(null, 202, '缺少参数')
+    }
+    try {
+        const data = await Orders.updateOne({ order_id }, { status: 1 })
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 用户确认收货（2）
+async function takeGoodsByID(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const { order_id, seller_id } = req.body
+    if (order_id === undefined || seller_id === undefined) {
+        return res.status(404).sendResult(null, 202, '缺少参数')
+    }
+    try {
+        const sellerInfos = await User.findOne({ openid: seller_id })
+        if (!sellerInfos) {
+            return res.sendResult(sellerInfos, 204, '查无此商家信息，无法执行操作')
+        }
+        // 更新订单状态 商家获取所得金额
+        const data = await Orders.updateOne({ order_id }, { status: 2 })
+        let { totalPrice } = await Orders.findOne({ order_id })
+        let { money } = await User.findOne({ openid: seller_id }).lean()
+        money += totalPrice
+        await User.updateOne({ openid: seller_id }, { money })
+        res.sendResult(data, 200, '已确认收货')
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 用户发起退货申请（3）
+async function returnGoodsByID(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const { order_id } = req.body
+    if (order_id === undefined) {
+        return res.status(404).sendResult(null, 202, '缺少参数')
+    }
+    try {
+        const data = await Orders.updateOne({ order_id }, { status: 3 })
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 商家处理退货申请 进入退货中状态
+async function agreeReturn(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const { order_id } = req.body
+    if (order_id === undefined) {
+        return res.status(404).sendResult(null, 202, '缺少参数')
+    }
+    try {
+        const data = await Orders.updateOne({ order_id }, { status: 4 })
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
+// 拒绝退货后 根据 status 返回至原来状态（0-->3-->0 / 2-->3-->2/4）
+async function backResquest(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    // 这里传过来的 status 判断原来的订单状态
+    const { order_id, status } = req.body
+    if (order_id === undefined || status === undefined) {
+        return res.status(404).sendResult(null, 202, '缺少参数')
+    }
+    try {
+        const data = await Orders.updateOne({ order_id }, { status })
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+
+// 商家确认退货商品，完成退货流程
+async function checkGoods(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const { order_id, seller_id, buyer_id } = req.body
+    if (order_id === undefined || seller_id === undefined || buyer_id === undefined) {
+        return res.status(404).sendResult(null, 202, '缺少参数')
+    }
+    try {
+        // 更改订单状态 同时更新商家和买家的账户金额
+        const { totalPrice } = await Orders.find({ order_id })
+        const data = await Orders.updateOne({ order_id }, { status: 5 })
+        let sellerData = await User.findOne({ openid: seller_id })
+        let buyerData = await User.findOne({ openid: buyer_id })
+        buyerData.money += totalPrice
+        sellerData.money -= totalPrice
+        await User.updateOne({ openid: seller_id },sellerData)
+        await User.updateOne({ openid: buyer_id },buyerData)
+        res.sendResult(data,200,'完成退货')
+    } catch (err) {
+        next(err)
+    }
+}
 module.exports = {
-    createOrder, findOrdersInfo, getOrdersList, editAddress, OrderPay
+    createOrder, findOrdersInfo, getOrdersList, editAddress, OrderPay, editDes,
+    getMyGoodsOrdersByID, deliverGoodsByID, returnGoodsByID, takeGoodsByID,
+    backResquest, agreeReturn, checkGoods
 }

@@ -7,8 +7,8 @@ const User = require('../../../../model/user')
 // const multer = require('multer') 
 const upload = require('../../../../utils/upload')
 
-const uploadObj = upload.uploadSetting(null, 'file', 1, ['.PNG'])
-// const uploadObj = upload.uploadSetting('./upload/img', 'img', 1, ['.PNG', '.jpg', '.txt'])
+// const uploadObj = upload.uploadSetting(null, 'file', 1, ['.PNG'])
+const uploadObj = upload.uploadSetting('./upload/img/goods', 'img', 8, ['.png', '.jpg', '.bmp','.jpeg'])
 
 // 设置图片存储路径(标准写法)
 // const storage = multer.diskStorage({

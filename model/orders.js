@@ -51,12 +51,13 @@ const ordersSchema = new Schema({
     },
     status: {
         type: Number,
-        enum: [0, 1, 2, 3, 4],
-        // 0 已支付
-        // 1 交易中
+        enum: [0, 1, 2, 3, 4, 5],
+        // 0 已支付(待发货)
+        // 1 待收货
         // 2 交易完成
-        // 3 退货处理中
-        // 4 退货完成
+        // 3 退货申请中
+        // 4 退货处理中
+        // 5 退货完成
         default: 0
     },
     totalPrice: {
@@ -69,6 +70,14 @@ const ordersSchema = new Schema({
     },
     goods_price: {
         type: Number,
+        required: true
+    },
+    telNumber: {
+        type: String,
+        require: true
+    },
+    postalCode: {
+        type: String,
         required: true
     }
 

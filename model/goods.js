@@ -46,10 +46,13 @@ const goodsSchema = new Schema({
     status: {
         type: Number,
         // 0 正常售出
-        // 1 售罄
+        // 1 售罄（缺货）
         // 2 暂停售出
-        enum: [0, 1, 2],
-        default: 0
+        // 3 禁止出售
+        // 4 审核中
+        // 5 审核不通过
+        enum: [0, 1, 2, 3, 4, 5],
+        default: 4
     },
     goods_type: {
         type: String,
@@ -64,6 +67,10 @@ const goodsSchema = new Schema({
         // 浏览量
         type: Number,
         default: 0
+    },
+    telNumber: {
+        type: String,
+        required: true
     }
 })
 

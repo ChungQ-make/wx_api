@@ -22,13 +22,13 @@ async function getFloorData(req, res, next) {
         // 终极版本
         floorData.forEach(async (v, i) => {
             // v._created_time = moment(v.created_time).format("YYYY-MM-DD HH:mm")
-            const data = await Goods.find({ goods_type: v.sort_name }).sort({ _id: -1 }).limit(count).lean()
+            const data = await Goods.find({ goods_type: v.sort_name,status: {$lte:2}}).sort({ _id: -1 }).limit(count).lean()
             v.children = data
+            v.goodsCount = data.length
             if (floorData.length - 1 === i) {
                 res.sendResult({ floorData, count })
             }
         })
-
         // 原来的写法
         // sortNameArray.forEach((v, i) => {
         //     Goods.find({ goods_type: v }, (err, data) => {
@@ -75,7 +75,7 @@ async function getCategoriesData(req, res, next) {
         }
         sortsData.forEach(async (v, i) => {
             // v._created_time = moment(v.created_time).format("YYYY-MM-DD HH:mm")
-            const data = await Goods.find({ goods_type: v.sort_name }).sort({ _id: -1 }).lean()
+            const data = await Goods.find({ goods_type: v.sort_name,status: {$lte:2}}).sort({ _id: -1 }).lean()
             v.children = data
             if (sortsData.length - 1 === i) {
                 res.sendResult(sortsData)
@@ -102,7 +102,23 @@ async function addNewSort(req, res, next) {
 }
 
 
+async function getCategoriesName(req,res,next){
+    try {
+        const sortsData = await Sort.find({ category_show: true },{sort_name: 1}).lean()
+        if (sortsData.length === 0) {
+            return res.sendResult(null, 404, '没有任何分类数据！')
+        }
+        let names = []
+        sortsData.forEach((item,index)=>{
+            names.push(item.sort_name)
+        })
+        res.sendResult(names)
+    } catch (err) {
+        next(err)
+    }
+}
+
 
 module.exports = {
-    getFloorData, getCategoriesData, addNewSort
+    getFloorData, getCategoriesData, addNewSort,getCategoriesName
 }
