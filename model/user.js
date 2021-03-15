@@ -67,7 +67,8 @@ const userSchema = new Schema({
         default: 1000
     },
     goodsCollection: {
-        // 商品收藏 存储商品的id
+        // // 商品收藏 存储商品的id
+        // 这里改成联系人列表
         type: Array,
         default: []
     },

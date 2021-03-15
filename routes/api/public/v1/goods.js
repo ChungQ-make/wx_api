@@ -90,8 +90,10 @@ router.post('/editGoods',tokenObj.verifyToken,(req,res,next)=>{
     GoodsManage.editGoodsByID(req,res,next)
 })
 
-
-
+// 获取指定用户允许出售的商品列表
+router.get('/sellerGoods',(req,res,next)=>{
+    GoodsManage.getSellerGoodsByID(req,res,next)
+})
 
 
 

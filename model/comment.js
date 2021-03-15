@@ -5,6 +5,14 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 const commentSchema = new Schema({
+    sender_id:{
+        type: String,
+        required: true
+    },
+    recipient_id:{
+        type: String,
+        required: true
+    },
     sender: {
         type: String,
         required: true
@@ -24,14 +32,6 @@ const commentSchema = new Schema({
     last_modified_time: {
         type: Date,
         default: Date.now
-    },
-    goods_id: {
-        type: String,
-        required: true
-    },
-    goods_name: {
-        type: String,
-        required: true
     }
 })
 

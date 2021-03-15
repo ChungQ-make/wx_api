@@ -5,7 +5,7 @@
 const User = require('../model/user')
 const token = require('../utils/token')
 const request = require('request')
-
+const Comment = require('../model/comment')
 
 // 登陆用户返回token值
 async function userLogin(req, res, next) {
@@ -119,11 +119,21 @@ async function getUerinfoByID(req,res,next){
     }
 }
 
-
+async function userQuery(req,res,next){
+    const {query} = req.query
+    try {
+        const reg = new RegExp(query, "gi")
+        const data = await User.findOne({nickName: reg},{ money: 0, goodsCollection: 0 })
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
 
 
 module.exports = {
     userLogin,
     userTopUps,
-    getUerinfoByID
+    getUerinfoByID,
+    userQuery
 }

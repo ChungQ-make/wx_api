@@ -106,9 +106,12 @@ async function getOneUserGoodsList(req, res, next) {
     if (openid === undefined) {
         return res.sendResult(null, 202, '缺少参数')
     }
-    const data = await Goods.find({ seller_id: openid })
-    res.sendResult(data)
-
+    try {
+        const data = await Goods.find({ seller_id: openid })
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
 }
 
 
@@ -209,6 +212,19 @@ async function editGoodsByID(req,res,next){
     }
 }
 
+// 获取指定商家允许出售的商品列表
+async function getSellerGoodsByID(req,res,next){
+    const { openid } = req.query
+    if (openid === undefined) {
+        return res.sendResult(null, 202, '缺少参数')
+    }
+    try {
+        const data = await Goods.find({ seller_id: openid ,status: { $lte: 2 }})
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
 
 module.exports = {
     addGoods,
@@ -220,5 +236,6 @@ module.exports = {
     toNormalByID,
     stopSelByID,
     addStocksByID,
-    editGoodsByID
+    editGoodsByID,
+    getSellerGoodsByID
 }
