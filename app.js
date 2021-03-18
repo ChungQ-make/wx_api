@@ -29,9 +29,11 @@ app.use(compression())
 const sendResult = require('./utils/sendResult')
 app.use(sendResult)
 
-// 配置body-parser 一定要在 app.use(router) 挂载路由之前
+// 配置 body-parser 一定要在 app.use(router) 挂载路由之前
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+// “bodyParser”已被弃用 可以使用express本身的built-in主体解析器库
+// app.use(express.json())
 
 // 开放可访问文件夹
 app.use('/public/', express.static(path.join(__dirname, './public/')))
@@ -54,7 +56,7 @@ app.use((req, res) => {
     res.status(404).sendResult(null, 404, '404 not found.')
 })
 //  处理500错误
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
     res.status(500).sendResult(err, 500, '500 server err.')
 })
 

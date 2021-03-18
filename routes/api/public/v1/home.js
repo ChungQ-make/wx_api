@@ -54,7 +54,7 @@ router.get('/catitems', (req, res, next) => {
             "name": "官方商城",
             "image_src": "http://localhost:5000/upload/img/catitems/goods_official.png",
             "open_type": "switchTab",
-            "navigator_url": "/pages/categories/main"
+            "navigator_url": "/pages/myShop/main?openid=ocAqT4j40nJf_KUjXB_aSq2kWLf0"
         }
     ]
     res.sendResult(data)

@@ -28,7 +28,7 @@ function uploadSetting(uploadUrl, filesName, maxCount, typeArr, fileSize) {
             cb(null, _uploadUrl)
         },
         filename: function (req, file, cb) {
-            cb(null, `${Date.now()}-${file.originalname}`)
+            cb(null, `${Date.now()}-${file.originalname}`) 
         }
     })
 

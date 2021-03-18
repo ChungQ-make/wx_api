@@ -171,4 +171,4 @@ router.get('/getInfos',async (req,res,next)=>{
     res.sendResult({money, data})
 })
 
-module.exports = router
+// module.exports = router

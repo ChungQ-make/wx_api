@@ -8,7 +8,6 @@ const Sort = require('../model/sort')
 // const lodash = require('lodash')
 const moment = require('moment')
 
-
 // 主页楼层的商品数据
 async function getFloorData(req, res, next) {
     try {

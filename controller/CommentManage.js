@@ -73,6 +73,7 @@ async function getContactsList(req, res, next) {
         let contactsList = []
         data.goodsCollection.forEach(async (item, index) => {
             contactsList.push(await User.findOne({ openid: item }, { money: 0, goodsCollection: 0 }).lean())
+            // 这里的goodsCollection原本是用来保存用户商品收藏的 现在改成了用户联系人收藏
             if (index === data.goodsCollection.length - 1) {
                 contactsList.forEach(async (item1, index1) => {
                     const _data = await Comment.find(

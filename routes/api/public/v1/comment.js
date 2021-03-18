@@ -9,7 +9,7 @@ const tokenObj = require('../../../../utils/token')
 router.post('/uerSession',tokenObj.verifyToken,(req,res,next)=>{
     CommentManage.getUerSession(req,res,next) 
 })
-
+    
 //  创建一对一会话时对话信息
 router.post('/create',tokenObj.verifyToken,(req,res,next)=>{
     CommentManage.createComment(req,res,next) 
