@@ -1,13 +1,13 @@
 
-//  * 管理员操模块
+//  * 管理员操模块 （负责后台管理员账号的管理）
 
 const Admin = require('../model/admin')
-const User = require('../model/user')
+// const User = require('../model/user')
 const token = require('../utils/token_forAdmin')
-const upload = require('../utils/upload')
-const Goods = require('../model/goods')
-const Orders = require('../model/orders')
-const Sorts = require('../model/sort')
+// const upload = require('../utils/upload')
+// const Goods = require('../model/goods')
+// const Orders = require('../model/orders')
+// const Sorts = require('../model/sort')
 
 
 // 管理员登录

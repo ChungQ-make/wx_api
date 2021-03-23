@@ -1,11 +1,13 @@
 /*
-    负责处理订单数据模块
+   * 负责处理订单数据模块
 */
 
 const Orders = require('../model/orders')
 const token = require('../utils/token')
 const Goods = require('../model/goods')
 const User = require('../model/user')
+const fs = require('fs')
+const path = require('path')
 // 引入lodash插件进行深拷贝
 const lodash = require('lodash')
 
@@ -106,6 +108,7 @@ async function findOrdersInfo(req, res, next) {
     }
 }
 
+// 获取指定用户的订单
 async function getOrdersList(req, res, next) {
     const state = token.verify(req.token)
     if (!state) {
@@ -291,6 +294,7 @@ async function agreeReturn(req, res, next) {
         next(err)
     }
 }
+
 // 拒绝退货后 根据 status 返回至原来状态（0-->3-->0 / 2-->3-->2/4）
 async function backResquest(req, res, next) {
     const state = token.verify(req.token)
@@ -330,15 +334,145 @@ async function checkGoods(req, res, next) {
         let buyerData = await User.findOne({ openid: buyer_id })
         buyerData.money += totalPrice
         sellerData.money -= totalPrice
-        await User.updateOne({ openid: seller_id },sellerData)
-        await User.updateOne({ openid: buyer_id },buyerData)
-        res.sendResult(data,200,'完成退货')
+        await User.updateOne({ openid: seller_id }, sellerData)
+        await User.updateOne({ openid: buyer_id }, buyerData)
+        res.sendResult(data, 200, '完成退货')
     } catch (err) {
         next(err)
     }
 }
+
+
+// 管理员获取所有订单列表
+async function getAllOrderList(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+
+    let { query, pagenum, pagesize } = req.query
+    query = query.trim()
+    pagenum = pagenum === undefined ? 0 : pagenum - 1
+    pagesize = pagesize === undefined ? 8 : pagesize
+    const skip = pagenum * pagesize * 1
+
+    try {
+        // 通过判断query转成Number的数值型后的数据  来选择查询方式（这里混合查询）
+        if (query * 1) {
+            query = query * 1
+            const orderList = await Orders.find({ order_id: query }).limit(pagesize * 1).skip(skip)
+            const total = await Orders.find({ order_id: query }).countDocuments()
+            const pageCounts = Math.ceil(total / pagesize)
+            res.sendResult({
+                orderList,
+                total,
+                pagenum: pagenum * 1,
+                pagesize: pagesize * 1,
+                pageCounts
+            })
+        } else {
+            const reg = new RegExp(query, "gi")
+            const orderList = query ? await Orders.find({
+                $or: [
+                    { buyer_name: reg },
+                    { goods_name: reg }
+                ]
+            }).limit(pagesize * 1).skip(skip)
+                : await Orders.find({}).limit(pagesize * 1).skip(skip)
+
+            const total = query ? await Orders.find({
+                $or: [
+                    { buyer_name: reg },
+                    { goods_name: reg }
+                ]
+            }).countDocuments()
+                : await Orders.find({}).countDocuments()
+            const pageCounts = Math.ceil(total / pagesize)
+            res.sendResult({
+                orderList,
+                total,
+                pagenum: pagenum * 1,
+                pagesize: pagesize * 1,
+                pageCounts
+            })
+        }
+    } catch (err) {
+        next(err)
+    }
+}
+
+// * 获取全国地址五级联动数据(组件数据对应不一致 该api作废)
+function getAddressList(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const file = path.join(__dirname, '../utils/json/cityData.json')
+    fs.readFile(file, 'utf-8', function (err, data) {
+        if (err) {
+            res.sendResult(null, 500, '文件读取失败')
+        } else {
+            res.sendResult(JSON.parse(data))
+        }
+    })
+}
+
+
+async function updateOrderInfo(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    let { editOrderInfo } = req.body
+    const { order_id } = editOrderInfo
+    try {
+        const data = await Orders.updateOne({ order_id }, editOrderInfo)
+        res.sendResult(data, 200, '成功修改订单信息！')
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 管理员删除订单
+async function deleteOrder(req, res, next) {
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const { order_id } = req.body
+    if (order_id === undefined) {
+        return res.status(404).sendResult(null, 202, '缺少参数')
+    }
+    try {
+        const data = await Orders.deleteOne({ order_id })
+        res.sendResult(data, 200, '删除成功！')
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+// 后台更改订单状态
+async function editOrderState(req,res,next){
+    const state = token.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    const {order_id,status} = req.body
+    try {
+        const data = await Orders.updateOne({ order_id }, {status})
+        res.sendResult(data, 200, '成功修改商品状态！')
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+
+
 module.exports = {
     createOrder, findOrdersInfo, getOrdersList, editAddress, OrderPay, editDes,
     getMyGoodsOrdersByID, deliverGoodsByID, returnGoodsByID, takeGoodsByID,
-    backResquest, agreeReturn, checkGoods
+    backResquest, agreeReturn, checkGoods, getAllOrderList, getAddressList,
+    updateOrderInfo, deleteOrder,editOrderState
 }

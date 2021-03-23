@@ -1,5 +1,5 @@
 /* 
-     负责处理分类信息的模块
+    * 负责处理分类信息的模块
 */
 
 const tokenObj = require('../utils/token')
@@ -100,7 +100,7 @@ async function addNewSort(req, res, next) {
     }
 }
 
-
+// 所有允许展示的分类名称列表
 async function getCategoriesName(req,res,next){
     try {
         const sortsData = await Sort.find({ category_show: true },{sort_name: 1}).lean()
@@ -117,7 +117,27 @@ async function getCategoriesName(req,res,next){
     }
 }
 
+// 获取所有分类数据
+async function getAllSortsList(req,res,next){
+    const state = tokenObj.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    try {
+        const sortsData = await Sort.find({},{sort_name: 1}).lean()
+        if (sortsData.length === 0) {
+            return res.sendResult([], 200, '没有任何分类数据！')
+        }
+        let names = []
+        sortsData.forEach((item,index)=>{
+            names.push(item.sort_name)
+        })
+        res.sendResult(names)
+    } catch (err) {
+        next(err)
+    }
+}
 
 module.exports = {
-    getFloorData, getCategoriesData, addNewSort,getCategoriesName
+    getFloorData, getCategoriesData, addNewSort,getCategoriesName,getAllSortsList
 }
