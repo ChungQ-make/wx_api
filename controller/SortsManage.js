@@ -21,7 +21,7 @@ async function getFloorData(req, res, next) {
         // 终极版本
         floorData.forEach(async (v, i) => {
             // v._created_time = moment(v.created_time).format("YYYY-MM-DD HH:mm")
-            const data = await Goods.find({ goods_type: v.sort_name,status: {$lte:2}}).sort({ _id: -1 }).limit(count).lean()
+            const data = await Goods.find({ goods_type: v.sort_name, status: { $lte: 2 } }).sort({ _id: -1 }).limit(count).lean()
             v.children = data
             v.goodsCount = data.length
             if (floorData.length - 1 === i) {
@@ -74,7 +74,7 @@ async function getCategoriesData(req, res, next) {
         }
         sortsData.forEach(async (v, i) => {
             // v._created_time = moment(v.created_time).format("YYYY-MM-DD HH:mm")
-            const data = await Goods.find({ goods_type: v.sort_name,status: {$lte:2}}).sort({ _id: -1 }).lean()
+            const data = await Goods.find({ goods_type: v.sort_name, status: { $lte: 2 } }).sort({ _id: -1 }).lean()
             v.children = data
             if (sortsData.length - 1 === i) {
                 res.sendResult(sortsData)
@@ -85,30 +85,32 @@ async function getCategoriesData(req, res, next) {
     }
 }
 
-// 添加分类 (测试用)
+// 添加分类 
 async function addNewSort(req, res, next) {
     const state = tokenObj.verify(req.token)
     if (!state) {
         return res.status(403).sendResult(null, 403, '无效token！')
     }
-    const { sort_name } = req.body
+    const { addFrom } = req.body
     try {
-        const data = await new Sort({ sort_name }).save()
-        res.sendResult(data)
+        const data = await new Sort(addFrom).save()
+        res.sendResult(data,201,'成功添加新的分类')
     } catch (err) {
         next(err)
     }
 }
 
+
+
 // 所有允许展示的分类名称列表
-async function getCategoriesName(req,res,next){
+async function getCategoriesName(req, res, next) {
     try {
-        const sortsData = await Sort.find({ category_show: true },{sort_name: 1}).lean()
+        const sortsData = await Sort.find({ category_show: true }, { sort_name: 1 }).lean()
         if (sortsData.length === 0) {
             return res.sendResult(null, 404, '没有任何分类数据！')
         }
         let names = []
-        sortsData.forEach((item,index)=>{
+        sortsData.forEach((item, index) => {
             names.push(item.sort_name)
         })
         res.sendResult(names)
@@ -118,18 +120,18 @@ async function getCategoriesName(req,res,next){
 }
 
 // 获取所有分类数据
-async function getAllSortsList(req,res,next){
+async function getAllSortsList(req, res, next) {
     const state = tokenObj.verify(req.token)
     if (!state) {
         return res.status(403).sendResult(null, 403, '无效token！')
     }
     try {
-        const sortsData = await Sort.find({},{sort_name: 1}).lean()
+        const sortsData = await Sort.find({}, { sort_name: 1 }).lean()
         if (sortsData.length === 0) {
             return res.sendResult([], 200, '没有任何分类数据！')
         }
         let names = []
-        sortsData.forEach((item,index)=>{
+        sortsData.forEach((item, index) => {
             names.push(item.sort_name)
         })
         res.sendResult(names)
@@ -138,6 +140,52 @@ async function getAllSortsList(req,res,next){
     }
 }
 
+// 后台获取具体分类列表数据
+async function getCategoriesBC(req, res, next) {
+    const state = tokenObj.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    try {
+        const sortsData = await Sort.find({})
+        res.sendResult(sortsData)
+    } catch (err) {
+        next(err)
+    }
+
+}
+
+// 更新数据
+async function updateSortInfo(req, res, next) {
+    const state = tokenObj.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    try {
+        const { sortInfo } = req.body
+        const {_id} = sortInfo
+        const data = await Sort.updateOne({_id},sortInfo)
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 删除分类
+async function removeByID(req,res,next){
+    const state = tokenObj.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    try {
+        const { _id } = req.body
+        const data = await Sort.deleteOne({_id})
+        res.sendResult(data)
+    } catch (err) {
+        next(err)
+    }
+}
 module.exports = {
-    getFloorData, getCategoriesData, addNewSort,getCategoriesName,getAllSortsList
+    getFloorData, getCategoriesData, addNewSort, getCategoriesName, getAllSortsList, getCategoriesBC
+    , updateSortInfo,removeByID
 }

@@ -17,4 +17,6 @@ router.get('/', (req, res, next) => {
 router.get('/names', (req, res, next) => {
     SortsManage.getCategoriesName(req, res, next)
 })
+
+
 module.exports = router
