@@ -149,7 +149,7 @@ function uploadMiddleware(req, res, next) {
             })
             // next(err)
         } else {
-            next()
+            next(err)
         }
     })
 }

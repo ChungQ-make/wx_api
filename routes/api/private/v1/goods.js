@@ -37,4 +37,6 @@ router.post('/delete',token.verifyToken,(req, res, next) => {
 router.post('/state',token.verifyToken,(req, res, next) => {
     GoodsManage.editState(req,res,next)
 })
+
+
 module.exports = router

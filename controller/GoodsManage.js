@@ -5,7 +5,8 @@
 const { entries } = require('lodash')
 const Goods = require('../model/goods')
 const tokenObj = require('../utils/token')
-
+const fs = require('fs')
+const path = require('path')
 
 // 商品添加
 async function addGoods(req, res, next) {
@@ -353,7 +354,7 @@ async function updateGoodsInfos(req, res, next) {
     if (!state) {
         return res.status(403).sendResult(null, 403, '无效token！')
     }
-    let {editGoodsInfo} = req.body
+    let { editGoodsInfo } = req.body
     const { goods_id } = editGoodsInfo
     try {
         const data = await Goods.updateOne({ goods_id }, editGoodsInfo)
@@ -364,20 +365,120 @@ async function updateGoodsInfos(req, res, next) {
 }
 
 // 管理员更改商品状态
-async function editState(req,res,next){
+async function editState(req, res, next) {
     const state = tokenObj.verify(req.token)
     if (!state) {
         return res.status(403).sendResult(null, 403, '无效token！')
     }
-    const {goods_id,status} = req.body
+    const { goods_id, status } = req.body
     try {
-        const data = await Goods.updateOne({ goods_id }, {status})
+        const data = await Goods.updateOne({ goods_id }, { status })
         res.sendResult(data, 200, '成功修改商品状态！')
     } catch (err) {
         next(err)
-        
+
     }
 }
+// 获取本地存储的轮播图数据
+async function getSeiperData(req, res, next) {
+    const file = path.join(__dirname, '../model/static/swiper.json')
+    fs.readFile(file, 'utf-8', function (err, data) {
+        if (err) {
+            res.sendResult(null, 500, '文件读取失败')
+        } else {
+            res.sendResult(JSON.parse(data))
+        }
+    })
+}
+
+
+// 更新轮播图数据
+async function updateSwiperData(req, res, next) {
+    const state = tokenObj.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    try {
+        const { swiperInfo, index } = req.body
+        let file = path.join(__dirname, '../model/static/swiper.json')
+        fs.readFile(file, 'utf-8', function (err, data) {
+            if (err) {
+                res.sendResult(null, 500, '文件读取失败')
+            } else {
+                let newData = JSON.parse(data)
+                newData.swiper[index] = swiperInfo
+                const _data = JSON.stringify(newData)
+                fs.writeFile(file, _data, function (err) {
+                    if (err) {
+                        return next(err)
+                    }
+                    res.sendResult(null, 200, '修改成功')
+                })
+            }
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 删除轮播项
+async function deleteSwiperItem(req, res, next) {
+    const state = tokenObj.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    try {
+        const { index } = req.body
+        let file = path.join(__dirname, '../model/static/swiper.json')
+        fs.readFile(file, 'utf-8', function (err, data) {
+            if (err) {
+                res.sendResult(null, 500, '文件读取失败')
+            } else {
+                let newData = JSON.parse(data)
+                newData.swiper.splice(index, 1)
+                const _data = JSON.stringify(newData)
+                fs.writeFile(file, _data, function (err) {
+                    if (err) {
+                        return next(err)
+                    }
+                    res.sendResult(null, 200, '删除成功')
+                })
+            }
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+// 增加轮播项
+async function addSwiperItem(req, res, next) {
+    const state = tokenObj.verify(req.token)
+    if (!state) {
+        return res.status(403).sendResult(null, 403, '无效token！')
+    }
+    try {
+        const { newItem } = req.body
+        let file = path.join(__dirname, '../model/static/swiper.json')
+        fs.readFile(file, 'utf-8', function (err, data) {
+            if (err) {
+                res.sendResult(null, 500, '文件读取失败')
+            } else {
+                let newData = JSON.parse(data)
+                newData.swiper.push(newItem)
+                const _data = JSON.stringify(newData)
+                fs.writeFile(file, _data, function (err) {
+                    if (err) {
+                        return next(err)
+                    }
+                    res.sendResult(null, 201, '添加成功')
+                })
+            }
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
 
 module.exports = {
     addGoods,
@@ -396,5 +497,9 @@ module.exports = {
     getAllGoodsList,
     getGoodsDetail,
     updateGoodsInfos,
-    editState
+    editState,
+    getSeiperData,
+    updateSwiperData,
+    deleteSwiperItem,
+    addSwiperItem
 }

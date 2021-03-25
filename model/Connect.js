@@ -15,7 +15,7 @@ mongoose.connect('mongodb://localhost/mall_data', {
 })
 
 
-// 初始化管理员账号
+// 初始化超级管理员账号
 ;(async function () {
     if (!await Admin.findOne({
             username: 'admin'
@@ -26,7 +26,7 @@ mongoose.connect('mongodb://localhost/mall_data', {
             role: 'admin',
             status: 0
         }).save()
-        console.log('初始化管理员账号成功！')
+        console.log('初始化超级管理员账号成功！')
     }
     const adminInfos = [{
         username: 'admin',

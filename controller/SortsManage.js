@@ -185,6 +185,8 @@ async function removeByID(req,res,next){
         next(err)
     }
 }
+
+
 module.exports = {
     getFloorData, getCategoriesData, addNewSort, getCategoriesName, getAllSortsList, getCategoriesBC
     , updateSortInfo,removeByID
